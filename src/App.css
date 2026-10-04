@@ -1,0 +1,69 @@
+.app-shell {
+	background:
+		linear-gradient(135deg, rgba(231, 238, 226, 0.45), transparent 42%),
+		#f5f6f1;
+}
+
+.sidebar-shell {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	background: #193b35;
+}
+
+.sidebar-shell::before {
+	position: absolute;
+	z-index: -1;
+	inset: 0 0 auto;
+	height: 4px;
+	background: linear-gradient(90deg, #d4e8a8 0 32%, #e69c78 32% 54%, transparent 54%);
+	content: '';
+}
+
+.sidebar-link {
+	display: flex;
+	min-height: 44px;
+	width: 100%;
+	min-width: 0;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: 12px;
+	border-radius: 8px;
+	padding: 0 12px;
+	color: #c3d0c7;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.3;
+	text-align: left;
+	transition: background-color 150ms ease, color 150ms ease;
+}
+
+.sidebar-link:hover {
+	background: rgba(255, 255, 255, 0.08);
+	color: #fff;
+}
+
+.sidebar-link-active,
+.sidebar-link-active:hover {
+	background: #31594e;
+	color: #fff;
+}
+
+.sidebar-shell button:focus-visible {
+	outline: 2px solid #e69c78;
+	outline-offset: 2px;
+}
+
+@media (max-width: 1023px) {
+	.sidebar-shell {
+		overflow: visible;
+	}
+}
+
+@media (max-width: 480px) {
+	.sidebar-link {
+		gap: 8px;
+		padding: 8px 9px;
+		font-size: 12px;
+	}
+}
