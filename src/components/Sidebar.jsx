@@ -7,6 +7,9 @@ import {
   Warehouse,
   Factory
 } from 'lucide-react'
+import { useAuth } from '../context/useAuth'
+import SidebarLogin from './SidebarLogin'
+import SidebarUserInfo from './SidebarUserInfo'
 
 const navigation = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,6 +22,8 @@ const navigation = [
 ]
 
 function Sidebar({ activePage, onNavigate }) {
+  const { user } = useAuth()
+
   return (
     <aside className="sidebar-shell flex w-full shrink-0 flex-col text-white lg:min-h-screen lg:w-72">
       <div className="flex items-center gap-3 px-6 py-5 lg:px-7 lg:pb-8 lg:pt-8">
@@ -31,7 +36,7 @@ function Sidebar({ activePage, onNavigate }) {
         </div>
       </div>
 
-      <div className="px-4 lg:px-5">
+      <div className="flex-1 px-4 lg:px-5">
         <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a7b9ad]">Workspace</p>
         <nav aria-label="Main navigation" className="grid grid-cols-2 gap-2 lg:flex lg:flex-col">
           {navigation.map(({ id, label, icon: Icon }) => (
@@ -47,6 +52,10 @@ function Sidebar({ activePage, onNavigate }) {
             </button>
           ))}
         </nav>
+      </div>
+
+      <div className="mt-auto border-t border-white/10 px-4 py-4 lg:px-5 lg:py-5">
+        {user ? <SidebarUserInfo /> : <SidebarLogin />}
       </div>
     </aside>
   )
