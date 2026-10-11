@@ -1,9 +1,9 @@
-import {createContext, useContext, useState, useEffect} from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import supabase from "../services/supabase.js";
 
 const AuthContext = createContext(null);
 
-function AuthProvider({children}) {
+function AuthProvider({ children }) {
     const [session, setSession] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -12,9 +12,9 @@ function AuthProvider({children}) {
     useEffect(() => {
 
         supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+            setSession(session);
+            setUser(session?.user ?? null);
+            setLoading(false);
         });
 
         const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
@@ -25,14 +25,14 @@ function AuthProvider({children}) {
 
         return () => {
             authListener.subscription.unsubscribe();
-        };  
+        };
     }, []);
 
     const signUp = (email, password) =>
         supabase.auth.signUp({ email, password });
 
     const signIn = (email, password) =>
-        supabase.auth.signInWithPassword({ email, password });  
+        supabase.auth.signInWithPassword({ email, password });
 
     const signOut = () =>
         supabase.auth.signOut();
@@ -51,5 +51,5 @@ function useAuth() {
     }
     return context;
 }
-// eslint-disable-next-line react-refresh/only-export-components
+
 export { AuthProvider, useAuth };
