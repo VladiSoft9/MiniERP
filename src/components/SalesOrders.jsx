@@ -1,4 +1,4 @@
-import { useEffect, useState, useTransition, useCallback } from 'react'
+import { useEffect, useState, useTransition, useCallback, useMemo } from 'react'
 import {
   ShoppingCart,
   Plus,
@@ -7,32 +7,14 @@ import {
   PackageCheck,
   Layers,
   Calendar,
-  FileText
+  FileText,
+  FilterX,
+  X
 } from 'lucide-react'
 import { fetchSalesOrders } from '../services/salesOrders'
-
-function formatCurrency(amount) {
-  if (amount == null) return '0,00€'
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-  }).format(Number(amount))
-}
-
-function formatDate(dateString) {
-  if (!dateString) return '—'
-  try {
-    const d = new Date(dateString)
-    return d.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  } catch {
-    return dateString
-  }
-}
+import { formatCurrency, formatDate } from '../utils/formatters'
+import SalesOrdersKpi from './SalesOrdersKpi'
+import SalesOrdersFilters from './SalesOrdersFilters'
 
 function getStatusBadge(status) {
   const map = {
@@ -111,6 +93,11 @@ function SalesOrders() {
   const [error, setError] = useState(null)
   const [, startTransition] = useTransition()
 
+  const [searchTerm, setSearchTerm] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('date_desc')
+
   const loadOrders = useCallback(async () => {
     try {
       setLoading(true)
@@ -155,11 +142,78 @@ function SalesOrders() {
     }
   }, [])
 
+  // Sub-counts for filter badges
+  const finishedCount = useMemo(
+    () => orders.filter((o) => o.item?.type === 'finished_good').length,
+    [orders]
+  )
+  const semiFinishedCount = useMemo(
+    () => orders.filter((o) => o.item?.type === 'semi_finished').length,
+    [orders]
+  )
+
+  // Filtering & Sorting Logic
+  const filteredOrders = useMemo(() => {
+    return orders
+      .filter((order) => {
+        if (typeFilter !== 'all' && order.item?.type !== typeFilter) {
+          return false
+        }
+
+        if (statusFilter !== 'all' && order.status !== statusFilter) {
+          return false
+        }
+
+        if (searchTerm.trim()) {
+          const query = searchTerm.toLowerCase().trim()
+          const orderNum = (order.order_number || '').toLowerCase()
+          const customer = (order.customer_name || '').toLowerCase()
+          const itemName = (order.item?.name || '').toLowerCase()
+          const itemCode = (order.item?.code || '').toLowerCase()
+
+          return (
+            orderNum.includes(query) ||
+            customer.includes(query) ||
+            itemName.includes(query) ||
+            itemCode.includes(query)
+          )
+        }
+
+        return true
+      })
+      .sort((a, b) => {
+        if (sortBy === 'value_desc') return Number(b.total_value || 0) - Number(a.total_value || 0)
+        if (sortBy === 'value_asc') return Number(a.total_value || 0) - Number(b.total_value || 0)
+        if (sortBy === 'date_asc') return new Date(a.order_date || 0) - new Date(b.order_date || 0)
+        return new Date(b.order_date || 0) - new Date(a.order_date || 0)
+      })
+  }, [orders, searchTerm, typeFilter, statusFilter, sortBy])
+
+  const hasActiveFilters =
+    searchTerm.trim() !== '' ||
+    typeFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    sortBy !== 'date_desc'
+
+  const handleResetFilters = useCallback(() => {
+    setSearchTerm('')
+    setTypeFilter('all')
+    setStatusFilter('all')
+    setSortBy('date_desc')
+  }, [])
+
+  const filteredTotalValue = useMemo(() => {
+    return filteredOrders.reduce((sum, o) => sum + Number(o.total_value || 0), 0)
+  }, [filteredOrders])
+
+  const totalPortfolioValue = useMemo(() => {
+    return orders.reduce((sum, o) => sum + Number(o.total_value || 0), 0)
+  }, [orders])
+
   return (
     <main className="mx-auto w-full px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Title Section */}
+      {/* Top Header */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <div className="flex size-9 items-center justify-center rounded-lg bg-[#193b35] text-white shadow-xs">
@@ -172,14 +226,14 @@ function SalesOrders() {
           </p>
         </div>
 
-        {/* Buttons Section */}
+        {/* Action Controls */}
         <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={loadOrders}
             disabled={loading}
             title="Refresh Orders"
-            className="inline-flex h-9.5 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex h-9.5 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 disabled:opacity-60 cursor-pointer"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             <span>Refresh</span>
@@ -187,7 +241,7 @@ function SalesOrders() {
 
           <button
             type="button"
-            className="inline-flex h-9.5 items-center gap-2 rounded-lg bg-[#193b35] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#234f47] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#193b35]"
+            className="inline-flex h-9.5 items-center gap-2 rounded-lg bg-[#193b35] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#234f47] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#193b35] cursor-pointer"
           >
             <Plus size={15} />
             <span>New Sales Order</span>
@@ -195,6 +249,7 @@ function SalesOrders() {
         </div>
       </div>
 
+      {/* Error Banner */}
       {error && (
         <div className="mb-6 flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-800">
           <div className="flex items-center gap-3">
@@ -211,7 +266,24 @@ function SalesOrders() {
         </div>
       )}
 
-      {/* Main section */}
+      <SalesOrdersKpi orders={orders} loading={loading} />
+
+      <SalesOrdersFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        onResetFilters={handleResetFilters}
+        totalCount={orders.length}
+        filteredCount={filteredOrders.length}
+        finishedCount={finishedCount}
+        semiFinishedCount={semiFinishedCount}
+      />
+
       <section
         aria-label="Sales Orders Table"
         className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs"
@@ -284,7 +356,7 @@ function SalesOrders() {
                   </tr>
                 ))
               ) : orders.length === 0 ? (
-                // Empty State
+                // Empty Database State
                 <tr>
                   <td colSpan={9} className="px-6 py-16 text-center">
                     <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
@@ -296,9 +368,30 @@ function SalesOrders() {
                     </p>
                   </td>
                 </tr>
+              ) : filteredOrders.length === 0 ? (
+                // Filter Mismatch Empty State
+                <tr>
+                  <td colSpan={9} className="px-6 py-16 text-center">
+                    <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                      <FilterX size={24} />
+                    </div>
+                    <h3 className="mt-3 text-sm font-semibold text-slate-800">No matching orders found</h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      No sales orders match your current filter or search criteria.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+                    >
+                      <X size={13} />
+                      <span>Reset Filters</span>
+                    </button>
+                  </td>
+                </tr>
               ) : (
                 // Data Rows
-                orders.map((order) => {
+                filteredOrders.map((order) => {
                   const item = order.item || {}
                   const uom = item.unit_of_measure || 'pcs'
 
@@ -368,18 +461,24 @@ function SalesOrders() {
           </table>
         </div>
 
-        {/* Footer */}
+        {/* Footer Summary / Counter */}
         {orders.length > 0 && (
-          <div className="flex items-center justify-between border-t border-slate-200/80 bg-slate-50/50 px-5 py-3 text-xs text-slate-500">
+          <div className="flex flex-col gap-2 border-t border-slate-200/80 bg-slate-50/50 px-5 py-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
             <span>
-              Total: <strong className="text-slate-700">{orders.length}</strong> sales {orders.length > 1 ? 'orders' : 'order'}
+              Showing <strong className="text-slate-700">{filteredOrders.length}</strong> of{' '}
+              <strong className="text-slate-700">{orders.length}</strong> sales {orders.length > 1 ? 'orders' : 'order'}
             </span>
             <div className="flex items-center gap-4">
               <span>
-                Portfolio Value:{' '}
+                {hasActiveFilters ? 'Filtered Value: ' : 'Portfolio Value: '}
                 <strong className="font-mono font-semibold text-[#193b35]">
-                  {formatCurrency(orders.reduce((sum, o) => sum + Number(o.total_value || 0), 0))}
+                  {formatCurrency(filteredTotalValue)}
                 </strong>
+                {hasActiveFilters && (
+                  <span className="ml-1 text-slate-400">
+                    (Total: {formatCurrency(totalPortfolioValue)})
+                  </span>
+                )}
               </span>
             </div>
           </div>
