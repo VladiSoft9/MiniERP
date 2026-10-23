@@ -115,32 +115,8 @@ function SalesOrders() {
   }, [])
 
   useEffect(() => {
-    let ignore = false
-
-    async function init() {
-      try {
-        const data = await fetchSalesOrders()
-        if (!ignore) {
-          startTransition(() => {
-            setOrders(data)
-            setLoading(false)
-          })
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error(err)
-          setError('Failed to load sales orders. Please check your Supabase connection.')
-          setLoading(false)
-        }
-      }
-    }
-
-    init()
-
-    return () => {
-      ignore = true
-    }
-  }, [])
+    loadOrders()
+  }, [loadOrders])
 
   // Sub-counts for filter badges
   const finishedCount = useMemo(
