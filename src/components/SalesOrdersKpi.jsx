@@ -80,7 +80,7 @@ function SalesOrdersKpi({ orders = [], loading = false }) {
           <span className="font-mono font-semibold text-amber-700">
             {formatCurrency(stats.activeValue)}
           </span>
-          <span>in confirmed / production</span>
+          <span>confirmed / in production</span>
         </div>
       </div>
 

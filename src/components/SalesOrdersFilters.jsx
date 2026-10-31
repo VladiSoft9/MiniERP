@@ -27,7 +27,7 @@ function SalesOrdersFilters({
       className="mb-6 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        {/* Search Input Bar (kept neutral as requested) */}
+        {/* Search Input Bar */}
         <div className="relative flex-1 min-w-[260px]">
           <Search
             size={16}
@@ -53,18 +53,17 @@ function SalesOrdersFilters({
           )}
         </div>
 
-        {/* Controls Cluster with subtle hover interactions */}
+        {/* Controls Cluster */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Classification Segmented Tabs */}
           <div className="inline-flex rounded-xl bg-slate-100 p-1 text-xs">
             <button
               type="button"
               onClick={() => onTypeFilterChange('all')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${
-                typeFilter === 'all'
-                  ? 'bg-white text-slate-900 shadow-2xs font-semibold hover:shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 hover:shadow-2xs'
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'all'
+                ? 'bg-white text-slate-900 shadow-2xs font-semibold hover:shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 hover:shadow-2xs'
+                }`}
             >
               <span>All</span>
               <span className="rounded-full bg-slate-200/80 px-1.5 py-0.2 text-[10px] text-slate-700">
@@ -75,20 +74,18 @@ function SalesOrdersFilters({
             <button
               type="button"
               onClick={() => onTypeFilterChange('finished_good')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${
-                typeFilter === 'finished_good'
-                  ? 'bg-[#193b35] text-white shadow-2xs font-semibold hover:bg-[#234f47] hover:shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-[#193b35]/8'
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'finished_good'
+                ? 'bg-[#193b35] text-white shadow-2xs font-semibold hover:bg-[#234f47] hover:shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#193b35]/8'
+                }`}
             >
               <PackageCheck size={13} />
               <span>Finished</span>
               <span
-                className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-                  typeFilter === 'finished_good'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-200/80 text-slate-700'
-                }`}
+                className={`rounded-full px-1.5 py-0.2 text-[10px] ${typeFilter === 'finished_good'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-slate-200/80 text-slate-700'
+                  }`}
               >
                 {finishedCount}
               </span>
@@ -97,20 +94,18 @@ function SalesOrdersFilters({
             <button
               type="button"
               onClick={() => onTypeFilterChange('semi_finished')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${
-                typeFilter === 'semi_finished'
-                  ? 'bg-[#8f4724] text-white shadow-2xs font-semibold hover:bg-[#a6532a] hover:shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-[#8f4724]/8'
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'semi_finished'
+                ? 'bg-[#8f4724] text-white shadow-2xs font-semibold hover:bg-[#a6532a] hover:shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-[#8f4724]/8'
+                }`}
             >
               <Layers size={13} />
               <span>Semi-Finished</span>
               <span
-                className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-                  typeFilter === 'semi_finished'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-200/80 text-slate-700'
-                }`}
+                className={`rounded-full px-1.5 py-0.2 text-[10px] ${typeFilter === 'semi_finished'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-slate-200/80 text-slate-700'
+                  }`}
               >
                 {semiFinishedCount}
               </span>
@@ -185,7 +180,6 @@ function SalesOrdersFilters({
         </div>
       </div>
 
-      {/* Filter State Feedback Subline */}
       {hasActiveFilters && (
         <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5 text-xs text-slate-500">
           <div className="flex items-center gap-2">
@@ -199,13 +193,9 @@ function SalesOrdersFilters({
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onResetFilters}
-            className="text-[11px] font-semibold text-[#193b35] transition-colors hover:underline hover:text-[#234f47] cursor-pointer"
-          >
-            Clear filters
-          </button>
+          <p className="text-slate-800">
+            Filtered View
+          </p>
         </div>
       )}
     </section>

@@ -9,12 +9,14 @@ import {
   Calendar,
   FileText,
   FilterX,
-  X
+  X,
+  CheckCircle2
 } from 'lucide-react'
 import { fetchSalesOrders } from '../services/salesOrders'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import SalesOrdersKpi from './SalesOrdersKpi'
 import SalesOrdersFilters from './SalesOrdersFilters'
+import NewSalesOrderForm from './NewSalesOrderForm'
 
 function getStatusBadge(status) {
   const map = {
@@ -91,8 +93,11 @@ function SalesOrders() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState(null)
   const [, startTransition] = useTransition()
 
+  // Filter & Search state
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -117,6 +122,23 @@ function SalesOrders() {
   useEffect(() => {
     loadOrders()
   }, [loadOrders])
+
+  // Auto-dismiss toast after 4 seconds
+  useEffect(() => {
+    if (!toastMessage) return
+    const timer = setTimeout(() => {
+      setToastMessage(null)
+    }, 4000)
+    return () => clearTimeout(timer)
+  }, [toastMessage])
+
+  // Handle new order created from Form
+  const handleOrderCreated = useCallback((newOrder) => {
+    startTransition(() => {
+      setOrders((prev) => [newOrder, ...prev])
+    })
+    setToastMessage(`Sales order ${newOrder.order_number} was successfully created!`)
+  }, [])
 
   // Sub-counts for filter badges
   const finishedCount = useMemo(
@@ -217,6 +239,7 @@ function SalesOrders() {
 
           <button
             type="button"
+            onClick={() => setIsFormOpen(true)}
             className="inline-flex h-9.5 items-center gap-2 rounded-lg bg-[#193b35] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#234f47] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#193b35] cursor-pointer"
           >
             <Plus size={15} />
@@ -224,6 +247,24 @@ function SalesOrders() {
           </button>
         </div>
       </div>
+
+      {/* Success Toast / Notification */}
+      {toastMessage && (
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-800 shadow-sm animate-in fade-in duration-200">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
+            <span className="font-medium">{toastMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToastMessage(null)}
+            className="rounded-md p-1 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
+            aria-label="Dismiss message"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Error Banner */}
       {error && (
@@ -260,6 +301,7 @@ function SalesOrders() {
         semiFinishedCount={semiFinishedCount}
       />
 
+      {/* Orders Table */}
       <section
         aria-label="Sales Orders Table"
         className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs"
@@ -460,6 +502,14 @@ function SalesOrders() {
           </div>
         )}
       </section>
+
+      {isFormOpen && (
+        <NewSalesOrderForm
+          onClose={() => setIsFormOpen(false)}
+          onOrderCreated={handleOrderCreated}
+          existingOrders={orders}
+        />
+      )}
     </main>
   )
 }
