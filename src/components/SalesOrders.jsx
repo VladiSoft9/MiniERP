@@ -97,7 +97,6 @@ function SalesOrders() {
   const [toastMessage, setToastMessage] = useState(null)
   const [, startTransition] = useTransition()
 
-  // Filter & Search state
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -123,15 +122,6 @@ function SalesOrders() {
     loadOrders()
   }, [loadOrders])
 
-  // Auto-dismiss toast after 4 seconds
-  useEffect(() => {
-    if (!toastMessage) return
-    const timer = setTimeout(() => {
-      setToastMessage(null)
-    }, 4000)
-    return () => clearTimeout(timer)
-  }, [toastMessage])
-
   // Handle new order created from Form
   const handleOrderCreated = useCallback((newOrder) => {
     startTransition(() => {
@@ -140,7 +130,14 @@ function SalesOrders() {
     setToastMessage(`Sales order ${newOrder.order_number} was successfully created!`)
   }, [])
 
-  // Sub-counts for filter badges
+  useEffect(() => {
+    if (!toastMessage) return
+    const timer = setTimeout(() => {
+      setToastMessage(null)
+    }, 4000)
+    return () => clearTimeout(timer)
+  }, [toastMessage])
+
   const finishedCount = useMemo(
     () => orders.filter((o) => o.item?.type === 'finished_good').length,
     [orders]
@@ -150,7 +147,6 @@ function SalesOrders() {
     [orders]
   )
 
-  // Filtering & Sorting Logic
   const filteredOrders = useMemo(() => {
     return orders
       .filter((order) => {

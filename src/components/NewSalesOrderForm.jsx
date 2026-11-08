@@ -55,38 +55,30 @@ function NewSalesOrderForm({ onClose, onOrderCreated, existingOrders = [] }) {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    let ignore = false
-
     async function loadItems() {
       try {
         setLoadingItems(true)
+
         const data = await fetchEligibleItems()
-        if (!ignore) {
-          setItems(data)
-          if (data.length > 0) {
-            setSelectedItemId(data[0].id)
-            if (data[0].standard_cost) {
-              setUnitPrice(String(data[0].standard_cost))
-            }
+
+        setItems(data)
+
+        if (data.length > 0) {
+          setSelectedItemId(data[0].id)
+
+          if (data[0].standard_cost) {
+            setUnitPrice(String(data[0].standard_cost))
           }
         }
       } catch (err) {
-        if (!ignore) {
-          console.error(err)
-          setError('Failed to load product catalog. Please retry.')
-        }
+        console.error(err)
+        setError('Failed to load product catalog. Please retry.')
       } finally {
-        if (!ignore) {
-          setLoadingItems(false)
-        }
+        setLoadingItems(false)
       }
     }
 
     loadItems()
-
-    return () => {
-      ignore = true
-    }
   }, [])
 
   useEffect(() => {
@@ -101,19 +93,18 @@ function NewSalesOrderForm({ onClose, onOrderCreated, existingOrders = [] }) {
 
   const handleItemSelectChange = (id) => {
     setSelectedItemId(id)
-    const found = items.find((it) => it.id === id)
+    const found = items.find((item) => item.id === id)
     if (found && found.standard_cost) {
       setUnitPrice(String(found.standard_cost))
     }
   }
 
-  const filteredCatalogItems = items.filter((it) => {
+  const filteredCatalogItems = items.filter((item) => {
     if (itemFilter === 'all') return true
-    return it.type === itemFilter
+    return item.type === itemFilter
   })
 
-  // Selected item object (if existing mode)
-  const currentSelectedItem = items.find((it) => it.id === selectedItemId)
+  const currentSelectedItem = items.find((item) => item.id === selectedItemId)
 
   const currentUom =
     itemMode === 'existing'
@@ -167,7 +158,7 @@ function NewSalesOrderForm({ onClose, onOrderCreated, existingOrders = [] }) {
     setSubmitting(true)
 
     try {
-      const orderPayload = {
+      const orderInsert = {
         order_number: orderNumber.trim(),
         customer_name: customerName.trim(),
         item_id: itemMode === 'existing' ? selectedItemId : null,
@@ -179,7 +170,7 @@ function NewSalesOrderForm({ onClose, onOrderCreated, existingOrders = [] }) {
         notes: notes.trim() || null,
       }
 
-      const newItemPayload =
+      const newItemInsert =
         itemMode === 'new'
           ? {
             code: newItemCode.trim().toUpperCase(),
@@ -192,8 +183,8 @@ function NewSalesOrderForm({ onClose, onOrderCreated, existingOrders = [] }) {
           : null
 
       const createdOrder = await createSalesOrder({
-        orderData: orderPayload,
-        newItemData: newItemPayload,
+        orderData: orderInsert,
+        newItemData: newItemInsert,
       })
 
       if (onOrderCreated) {
@@ -271,7 +262,7 @@ function NewSalesOrderForm({ onClose, onOrderCreated, existingOrders = [] }) {
             </div>
           )}
 
-          {/* Section 1: Product Selection */}
+          {/* Product Selection */}
           <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
@@ -294,7 +285,7 @@ function NewSalesOrderForm({ onClose, onOrderCreated, existingOrders = [] }) {
                   type="button"
                   onClick={() => setItemMode('existing')}
                   className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all cursor-pointer ${itemMode === 'existing'
-                    ? 'bg-white text-[#193b35] shadow-2xs font-semibold'
+                    ? 'bg-[#193b35] text-white shadow-2xs font-semibold'
                     : 'text-slate-600 hover:text-slate-900'
                     }`}
                 >
