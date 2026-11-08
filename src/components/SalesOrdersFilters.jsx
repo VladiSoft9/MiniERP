@@ -1,4 +1,5 @@
 import { Search, X, PackageCheck, Layers, ArrowUpDown, FilterX } from 'lucide-react'
+import { ORDER_STATUS_LIST } from '../utils/orderStatuses'
 
 function SalesOrdersFilters({
   searchTerm = '',
@@ -121,11 +122,11 @@ function SalesOrdersFilters({
               className="h-10 appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 text-xs font-medium text-slate-700 shadow-2xs transition-all duration-200 hover:border-slate-300 hover:bg-slate-50/80 hover:shadow-xs hover:text-slate-900 focus:border-[#193b35] focus:outline-none focus:ring-1 focus:ring-[#193b35] cursor-pointer"
             >
               <option value="all">All Statuses</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="in_production">In Production</option>
-              <option value="delivered">Delivered</option>
-              <option value="draft">Draft</option>
-              <option value="cancelled">Cancelled</option>
+              {ORDER_STATUS_LIST.map((status) => (
+                <option key={status.key} value={status.key}>
+                  {status.label}
+                </option>
+              ))}
             </select>
             <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-hover:text-slate-600">
               <svg className="size-3.5" viewBox="0 0 20 20" fill="currentColor">

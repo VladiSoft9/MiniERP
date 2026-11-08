@@ -10,58 +10,16 @@ import {
   FileText,
   FilterX,
   X,
-  CheckCircle2
+  CheckCircle2,
 } from 'lucide-react'
-import { fetchSalesOrders } from '../services/salesOrders'
+import { fetchSalesOrders, updateSalesOrderStatus } from '../services/salesOrders'
 import { formatCurrency, formatDate } from '../utils/formatters'
+import { getStatusConfig } from '../utils/orderStatuses'
 import SalesOrdersKpi from './SalesOrdersKpi'
 import SalesOrdersFilters from './SalesOrdersFilters'
 import NewSalesOrderForm from './NewSalesOrderForm'
-
-function getStatusBadge(status) {
-  const map = {
-    confirmed: {
-      label: 'Confirmed',
-      classes: 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-500/10',
-      dot: 'bg-emerald-500',
-    },
-    in_production: {
-      label: 'In Production',
-      classes: 'bg-amber-50 text-amber-700 border-amber-200 ring-1 ring-amber-500/10',
-      dot: 'bg-amber-500',
-    },
-    delivered: {
-      label: 'Delivered',
-      classes: 'bg-sky-50 text-sky-700 border-sky-200 ring-1 ring-sky-500/10',
-      dot: 'bg-sky-500',
-    },
-    draft: {
-      label: 'Draft',
-      classes: 'bg-slate-100 text-slate-600 border-slate-200 ring-1 ring-slate-500/10',
-      dot: 'bg-slate-400',
-    },
-    cancelled: {
-      label: 'Cancelled',
-      classes: 'bg-rose-50 text-rose-700 border-rose-200 ring-1 ring-rose-500/10',
-      dot: 'bg-rose-500',
-    },
-  }
-
-  const config = map[status] || {
-    label: status || 'Unknown',
-    classes: 'bg-slate-100 text-slate-600 border-slate-200 ring-1 ring-slate-400/10',
-    dot: 'bg-slate-400',
-  }
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${config.classes}`}
-    >
-      <span className={`size-1.5 rounded-full ${config.dot}`} aria-hidden="true" />
-      {config.label}
-    </span>
-  )
-}
+import OrderStatusSelector from './OrderStatusSelector'
+import DeliveryConfirmationModal from './DeliveryConfirmationModal'
 
 function getItemTypeBadge(type) {
   if (type === 'finished_good') {
@@ -95,6 +53,9 @@ function SalesOrders() {
   const [error, setError] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState(null)
+  const [updatingOrderId, setUpdatingOrderId] = useState(null)
+  const [deliveryConfirmOrder, setDeliveryConfirmOrder] = useState(null)
+  const [isConfirmingDelivery, setIsConfirmingDelivery] = useState(false)
   const [, startTransition] = useTransition()
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -122,7 +83,58 @@ function SalesOrders() {
     loadOrders()
   }, [loadOrders])
 
-  // Handle new order created from Form
+  const handleStatusChange = useCallback(async (order, newStatus) => {
+    if (!order || !order.id) return
+    const oldStatus = order.status
+
+    if (oldStatus === newStatus) return
+
+    if (oldStatus === 'delivered') {
+      setToastMessage({
+        type: 'error',
+        text: `Order ${order.order_number} is already delivered and cannot be modified.`,
+      })
+      return
+    }
+
+    try {
+      setUpdatingOrderId(order.id)
+      const updatedOrder = await updateSalesOrderStatus(order.id, newStatus, oldStatus)
+
+      startTransition(() => {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === order.id ? updatedOrder : o))
+        )
+      })
+
+      const newLabel = getStatusConfig(newStatus).label
+      setToastMessage(
+        newStatus === 'delivered'
+          ? `Sales order ${order.order_number} marked as Delivered and locked.`
+          : `Sales order ${order.order_number} status updated to "${newLabel}".`
+      )
+    } catch (err) {
+      console.error(err)
+      setToastMessage({
+        type: 'error',
+        text: err.message || 'Failed to update order status. Please try again.',
+      })
+    } finally {
+      setUpdatingOrderId(null)
+    }
+  }, [])
+
+  const handleConfirmDelivery = useCallback(async () => {
+    if (!deliveryConfirmOrder) return
+    try {
+      setIsConfirmingDelivery(true)
+      await handleStatusChange(deliveryConfirmOrder, 'delivered')
+      setDeliveryConfirmOrder(null)
+    } finally {
+      setIsConfirmingDelivery(false)
+    }
+  }, [deliveryConfirmOrder, handleStatusChange])
+
   const handleOrderCreated = useCallback((newOrder) => {
     startTransition(() => {
       setOrders((prev) => [newOrder, ...prev])
@@ -244,17 +256,28 @@ function SalesOrders() {
         </div>
       </div>
 
-      {/* Success Toast / Notification */}
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-800 shadow-sm animate-in fade-in duration-200">
+        <div
+          className={`mb-6 flex items-center justify-between rounded-xl border p-4 text-sm shadow-sm animate-in fade-in duration-200 ${typeof toastMessage === 'object' && toastMessage.type === 'error'
+            ? 'border-rose-200 bg-rose-50/90 text-rose-800'
+            : 'border-emerald-200 bg-emerald-50/90 text-emerald-800'
+            }`}
+        >
           <div className="flex items-center gap-3">
-            <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
-            <span className="font-medium">{toastMessage}</span>
+            {typeof toastMessage === 'object' && toastMessage.type === 'error' ? (
+              <AlertCircle size={18} className="shrink-0 text-rose-600" />
+            ) : (
+              <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
+            )}
+            <span className="font-medium">
+              {typeof toastMessage === 'string' ? toastMessage : toastMessage.text}
+            </span>
           </div>
           <button
             type="button"
             onClick={() => setToastMessage(null)}
-            className="rounded-md p-1 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
+            className="rounded-md p-1 hover:opacity-80 transition-opacity cursor-pointer"
             aria-label="Dismiss message"
           >
             <X size={14} />
@@ -331,7 +354,12 @@ function SalesOrders() {
                   Dates
                 </th>
                 <th scope="col" className="px-5 py-3.5">
-                  Status
+                  <div className="flex items-center gap-1.5">
+                    <span>Status</span>
+                    <span className="font-sans text-[10px] font-normal lowercase tracking-normal text-slate-400 hidden sm:inline">
+                      (click to update)
+                    </span>
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -465,7 +493,12 @@ function SalesOrders() {
                       </td>
 
                       <td className="px-5 py-4">
-                        {getStatusBadge(order.status)}
+                        <OrderStatusSelector
+                          order={order}
+                          onStatusChange={handleStatusChange}
+                          onRequestDeliveryConfirm={(targetOrder) => setDeliveryConfirmOrder(targetOrder)}
+                          isUpdating={updatingOrderId === order.id}
+                        />
                       </td>
                     </tr>
                   )
@@ -504,6 +537,15 @@ function SalesOrders() {
           onClose={() => setIsFormOpen(false)}
           onOrderCreated={handleOrderCreated}
           existingOrders={orders}
+        />
+      )}
+
+      {deliveryConfirmOrder && (
+        <DeliveryConfirmationModal
+          order={deliveryConfirmOrder}
+          onConfirm={handleConfirmDelivery}
+          onCancel={() => setDeliveryConfirmOrder(null)}
+          isConfirming={isConfirmingDelivery}
         />
       )}
     </main>

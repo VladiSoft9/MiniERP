@@ -1,4 +1,5 @@
 import supabase from './supabase'
+import { ORDER_STATUSES, isStatusLocked } from '../utils/orderStatuses'
 
 export async function fetchSalesOrders() {
   const { data, error } = await supabase
@@ -127,6 +128,57 @@ export async function createSalesOrder({ orderData, newItemData = null }) {
   }
 
   return createdOrder
+}
+
+export async function updateSalesOrderStatus(orderId, newStatus, currentStatus = null) {
+  if (!orderId) {
+    throw new Error('Order ID is required to update status.')
+  }
+
+  // Business rule: delivered orders are final and cannot be modified
+  if (currentStatus && isStatusLocked(currentStatus)) {
+    throw new Error('Delivered orders are final and cannot be modified.')
+  }
+
+  if (!ORDER_STATUSES[newStatus]) {
+    throw new Error(
+      `Invalid status "${newStatus}". Must be one of: ${Object.keys(ORDER_STATUSES).join(', ')}`
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('sales_orders')
+    .update({ status: newStatus })
+    .eq('id', orderId)
+    .select(`
+      id,
+      order_number,
+      customer_name,
+      quantity,
+      unit_price,
+      total_value,
+      status,
+      order_date,
+      delivery_date,
+      notes,
+      created_at,
+      item:items (
+        id,
+        code,
+        name,
+        type,
+        unit_of_measure,
+        standard_cost
+      )
+    `)
+    .single()
+
+  if (error) {
+    console.error('Error updating sales order status:', error)
+    throw new Error(`Failed to update status: ${error.message}`)
+  }
+
+  return data
 }
 
 export function generateNextOrderNumber(existingOrders = []) {
