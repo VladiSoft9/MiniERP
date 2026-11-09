@@ -1,5 +1,5 @@
-export const ORDER_STATUSES = {
-  draft: {
+export const ORDER_STATUSES = [
+  {
     key: 'draft',
     label: 'Draft',
     description: 'Initial draft, pending verification or approval',
@@ -8,7 +8,7 @@ export const ORDER_STATUSES = {
     activeBg: 'bg-slate-50',
     isFinal: false,
   },
-  confirmed: {
+  {
     key: 'confirmed',
     label: 'Confirmed',
     description: 'Order confirmed with customer & ready for scheduling',
@@ -17,7 +17,7 @@ export const ORDER_STATUSES = {
     activeBg: 'bg-emerald-50/60',
     isFinal: false,
   },
-  in_production: {
+  {
     key: 'in_production',
     label: 'In Production',
     description: 'Manufacturing, assembly or preparation underway',
@@ -26,7 +26,7 @@ export const ORDER_STATUSES = {
     activeBg: 'bg-amber-50/60',
     isFinal: false,
   },
-  delivered: {
+  {
     key: 'delivered',
     label: 'Delivered',
     description: 'Fulfilled & delivered to client (Status locked)',
@@ -35,7 +35,7 @@ export const ORDER_STATUSES = {
     activeBg: 'bg-sky-50/60',
     isFinal: true, // Delivered orders are final and cannot be modified
   },
-  cancelled: {
+  {
     key: 'cancelled',
     label: 'Cancelled',
     description: 'Order cancelled or voided',
@@ -44,9 +44,7 @@ export const ORDER_STATUSES = {
     activeBg: 'bg-rose-50/60',
     isFinal: false,
   },
-}
-
-export const ORDER_STATUS_LIST = Object.values(ORDER_STATUSES)
+]
 
 export function isStatusLocked(status) {
   return status === 'delivered'
@@ -54,7 +52,7 @@ export function isStatusLocked(status) {
 
 export function getStatusConfig(status) {
   return (
-    ORDER_STATUSES[status] || {
+    ORDER_STATUSES.find((s) => s.key === status) || {
       key: status || 'unknown',
       label: status || 'Unknown',
       description: 'Custom status',
@@ -65,4 +63,3 @@ export function getStatusConfig(status) {
     }
   )
 }
-

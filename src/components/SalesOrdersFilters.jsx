@@ -1,5 +1,5 @@
 import { Search, X, PackageCheck, Layers, ArrowUpDown, FilterX } from 'lucide-react'
-import { ORDER_STATUS_LIST } from '../utils/orderStatuses'
+import { ORDER_STATUSES } from '../utils/orderStatuses'
 
 function SalesOrdersFilters({
   searchTerm = '',
@@ -122,7 +122,7 @@ function SalesOrdersFilters({
               className="h-10 appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 text-xs font-medium text-slate-700 shadow-2xs transition-all duration-200 hover:border-slate-300 hover:bg-slate-50/80 hover:shadow-xs hover:text-slate-900 focus:border-[#193b35] focus:outline-none focus:ring-1 focus:ring-[#193b35] cursor-pointer"
             >
               <option value="all">All Statuses</option>
-              {ORDER_STATUS_LIST.map((status) => (
+              {ORDER_STATUSES.map((status) => (
                 <option key={status.key} value={status.key}>
                   {status.label}
                 </option>

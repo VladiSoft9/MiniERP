@@ -9,7 +9,7 @@ import {
   X,
 } from 'lucide-react'
 import {
-  ORDER_STATUS_LIST,
+  ORDER_STATUSES,
   getStatusConfig,
   isStatusLocked,
 } from '../utils/orderStatuses'
@@ -215,7 +215,7 @@ function OrderStatusSelector({
 
             {/* Status list */}
             <div className="p-1.5 space-y-0.5">
-              {ORDER_STATUS_LIST.map((statusItem) => {
+              {ORDER_STATUSES.map((statusItem) => {
                 const isCurrent = statusItem.key === currentStatus
                 const isDeliveredOption = statusItem.key === 'delivered'
 
@@ -276,7 +276,7 @@ function OrderStatusSelector({
               })}
             </div>
           </div>,
-          document.body
+          document.getElementById('portal')
         )}
     </>
   )

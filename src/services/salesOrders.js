@@ -140,9 +140,10 @@ export async function updateSalesOrderStatus(orderId, newStatus, currentStatus =
     throw new Error('Delivered orders are final and cannot be modified.')
   }
 
-  if (!ORDER_STATUSES[newStatus]) {
+  const isValidStatus = ORDER_STATUSES.some((s) => s.key === newStatus)
+  if (!isValidStatus) {
     throw new Error(
-      `Invalid status "${newStatus}". Must be one of: ${Object.keys(ORDER_STATUSES).join(', ')}`
+      `Invalid status "${newStatus}". Must be one of: ${ORDER_STATUSES.map((s) => s.key).join(', ')}`
     )
   }
 
