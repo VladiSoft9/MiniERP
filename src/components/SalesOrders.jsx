@@ -4,8 +4,6 @@ import {
   Plus,
   RefreshCw,
   AlertCircle,
-  PackageCheck,
-  Layers,
   Calendar,
   FileText,
   FilterX,
@@ -20,32 +18,7 @@ import SalesOrdersFilters from './SalesOrdersFilters'
 import NewSalesOrderForm from './NewSalesOrderForm'
 import OrderStatusSelector from './OrderStatusSelector'
 import DeliveryConfirmationModal from './DeliveryConfirmationModal'
-
-function getItemTypeBadge(type) {
-  if (type === 'finished_good') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-md bg-[#193b35]/10 px-2 py-0.5 text-xs font-semibold text-[#193b35]">
-        <PackageCheck size={12} className="text-[#193b35]" />
-        Finished Good
-      </span>
-    )
-  }
-
-  if (type === 'semi_finished') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-md bg-[#e69c78]/20 px-2 py-0.5 text-xs font-semibold text-[#8f4724]">
-        <Layers size={12} className="text-[#8f4724]" />
-        Semi-Finished
-      </span>
-    )
-  }
-
-  return (
-    <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-      {type || 'Unknown'}
-    </span>
-  )
-}
+import { getItemTypeBadge } from '../utils/itemTypes'
 
 function SalesOrders() {
   const [orders, setOrders] = useState([])
