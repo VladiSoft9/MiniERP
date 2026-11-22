@@ -1,4 +1,4 @@
-import { useEffect, useState, useTransition, useCallback } from 'react'
+import { useEffect, useState, useTransition, useCallback, useMemo } from 'react'
 import {
   Package,
   Plus,
@@ -10,16 +10,21 @@ import {
   X,
   Tag,
   Info,
+  FilterX,
 } from 'lucide-react'
 import { fetchItems } from '../services/items'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import { getItemTypeBadge } from '../utils/itemTypes'
+import ItemMasterFilters from './ItemMasterFilters'
+import ItemFormModal from './ItemFormModal'
 
 function ItemMaster() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [toastMessage, setToastMessage] = useState(null)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
   const [, startTransition] = useTransition()
 
   const loadItems = useCallback(async () => {
@@ -50,13 +55,103 @@ function ItemMaster() {
     return () => clearTimeout(timer)
   }, [toastMessage])
 
+  const [searchTerm, setSearchTerm] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [uomFilter, setUomFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('code_asc')
+
+  const finishedCount = useMemo(
+    () => items.filter((item) => item.type === 'finished_good').length,
+    [items]
+  )
+  const semiFinishedCount = useMemo(
+    () => items.filter((item) => item.type === 'semi_finished').length,
+    [items]
+  )
+  const rawMaterialCount = useMemo(
+    () => items.filter((item) => item.type === 'raw_material').length,
+    [items]
+  )
+
+  const uomOptions = useMemo(() => {
+    const set = new Set()
+    items.forEach((item) => {
+      if (item.unit_of_measure) set.add(item.unit_of_measure)
+    })
+    return Array.from(set).sort()
+  }, [items])
+
+  const filteredItems = useMemo(() => {
+    return items
+      .filter((item) => {
+        if (typeFilter !== 'all' && item.type !== typeFilter) {
+          return false
+        }
+
+        if (uomFilter !== 'all' && item.unit_of_measure !== uomFilter) {
+          return false
+        }
+
+        if (searchTerm.trim()) {
+          const query = searchTerm.toLowerCase().trim()
+          const code = (item.code || '').toLowerCase()
+          const name = (item.name || '').toLowerCase()
+          const desc = (item.description || '').toLowerCase()
+
+          return code.includes(query) || name.includes(query) || desc.includes(query)
+        }
+
+        return true
+      })
+      .sort((a, b) => {
+        if (sortBy === 'code_desc') return (b.code || '').localeCompare(a.code || '')
+        if (sortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '')
+        if (sortBy === 'name_desc') return (b.name || '').localeCompare(a.name || '')
+        if (sortBy === 'cost_desc') return (Number(b.standard_cost) || 0) - (Number(a.standard_cost) || 0)
+        if (sortBy === 'cost_asc') return (Number(a.standard_cost) || 0) - (Number(b.standard_cost) || 0)
+        if (sortBy === 'created_desc') return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+        if (sortBy === 'created_asc') return new Date(a.created_at || 0) - new Date(b.created_at || 0)
+        return (a.code || '').localeCompare(b.code || '')
+      })
+  }, [items, searchTerm, typeFilter, uomFilter, sortBy])
+
+  const hasActiveFilters =
+    searchTerm.trim() !== '' ||
+    typeFilter !== 'all' ||
+    uomFilter !== 'all' ||
+    sortBy !== 'code_asc'
+
+  const handleResetFilters = useCallback(() => {
+    setSearchTerm('')
+    setTypeFilter('all')
+    setUomFilter('all')
+    setSortBy('code_asc')
+  }, [])
+
+  const handleItemSaved = useCallback((savedItem, action) => {
+    startTransition(() => {
+      setItems((prev) => {
+        if (action === 'updated') {
+          return prev.map((item) => (item.id === savedItem.id ? savedItem : item))
+        }
+        return [savedItem, ...prev]
+      })
+    })
+
+    setToastMessage(
+      action === 'updated'
+        ? `Item "${savedItem.name}" [${savedItem.code}] was successfully updated.`
+        : `Item "${savedItem.name}" [${savedItem.code}] was successfully created!`
+    )
+  }, [])
+
   return (
     <main className="mx-auto w-full px-4 py-8 sm:px-6 lg:px-8">
       {/* Top Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-[#193b35] text-white shadow-xs">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#193b35] text-white shadow-xs">
               <Package size={19} />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Item Master</h1>
@@ -81,6 +176,10 @@ function ItemMaster() {
 
           <button
             type="button"
+            onClick={() => {
+              setEditingItem(null)
+              setIsFormOpen(true)
+            }}
             className="inline-flex h-9.5 items-center gap-2 rounded-lg bg-[#193b35] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#234f47] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#193b35] cursor-pointer transition-colors"
           >
             <Plus size={15} />
@@ -139,12 +238,31 @@ function ItemMaster() {
         </div>
       )}
 
+      {/* Search, Filter & Sort Controls */}
+      <ItemMasterFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
+        uomFilter={uomFilter}
+        onUomFilterChange={setUomFilter}
+        uomOptions={uomOptions}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        onResetFilters={handleResetFilters}
+        totalCount={items.length}
+        filteredCount={filteredItems.length}
+        finishedCount={finishedCount}
+        semiFinishedCount={semiFinishedCount}
+        rawMaterialCount={rawMaterialCount}
+      />
+
       {/* Items Table Card */}
       <section
         aria-label="Items Master Table"
         className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs"
       >
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto touch-pan-x">
           <table className="w-full min-w-[880px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
@@ -211,11 +329,43 @@ function ItemMaster() {
                     <p className="mt-1 text-xs text-slate-500">
                       Your items catalog is currently empty. Click &ldquo;Add New Item&rdquo; to register your first product or material.
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingItem(null)
+                        setIsFormOpen(true)
+                      }}
+                      className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg bg-[#193b35] px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-[#234f47] transition-colors cursor-pointer"
+                    >
+                      <Plus size={14} />
+                      <span>Add New Item</span>
+                    </button>
+                  </td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
+                // Empty Filtered State
+                <tr>
+                  <td colSpan={7} className="px-6 py-16 text-center">
+                    <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                      <FilterX size={24} />
+                    </div>
+                    <h3 className="mt-4 text-sm font-semibold text-slate-800">No matching items</h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      No catalog items match your active filters or search query.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <FilterX size={13} />
+                      <span>Reset Filters</span>
+                    </button>
                   </td>
                 </tr>
               ) : (
                 // Items Listing
-                items.map((item) => (
+                filteredItems.map((item) => (
                   <tr
                     key={item.id}
                     className="transition-colors hover:bg-slate-50/70"
@@ -230,7 +380,7 @@ function ItemMaster() {
                     </td>
 
                     <td className="px-5 py-4 align-top">
-                      <div className="font-medium text-slate-900 text-xs sm:text-sm">
+                      <div className="font-medium text-slate-900">
                         {item.name}
                       </div>
                       {item.description ? (
@@ -265,6 +415,10 @@ function ItemMaster() {
                       <div className="inline-flex items-center justify-center gap-1">
                         <button
                           type="button"
+                          onClick={() => {
+                            setEditingItem(item)
+                            setIsFormOpen(true)
+                          }}
                           title={`Edit ${item.name}`}
                           className="flex size-7 items-center justify-center rounded-lg text-slate-500 hover:bg-[#193b35]/10 hover:text-[#193b35] transition-colors cursor-pointer"
                         >
@@ -287,15 +441,33 @@ function ItemMaster() {
         </div>
 
         {/* Table Footer / Summary */}
-        <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-5 py-3 text-xs text-slate-500">
+        <div className="flex flex-col gap-2 border-t border-slate-200/80 bg-slate-50/50 px-5 py-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <span>
-            {loading ? 'Loading items...' : `Total items: ${items.length}`}
+            {loading
+              ? 'Loading items...'
+              : hasActiveFilters
+                ? `Showing ${filteredItems.length} of ${items.length} items`
+                : `Total items: ${items.length}`}
           </span>
           <span className="text-[11px] text-slate-400">
             MiniERP &bull; Item Master Registry
           </span>
         </div>
       </section>
+
+      {/* Add / Edit Item Modal */}
+      {isFormOpen && (
+        <ItemFormModal
+          key={editingItem?.id || 'new-item'}
+          isOpen={isFormOpen}
+          onClose={() => {
+            setIsFormOpen(false)
+            setEditingItem(null)
+          }}
+          onSuccess={handleItemSaved}
+          item={editingItem}
+        />
+      )}
     </main>
   )
 }

@@ -29,7 +29,7 @@ function SalesOrdersFilters({
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         {/* Search Input Bar */}
-        <div className="relative flex-1 min-w-[260px]">
+        <div className="relative w-full min-w-0 lg:flex-1 lg:max-w-md">
           <Search
             size={16}
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -47,7 +47,7 @@ function SalesOrdersFilters({
               type="button"
               onClick={() => onSearchChange('')}
               aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -55,13 +55,13 @@ function SalesOrdersFilters({
         </div>
 
         {/* Controls Cluster */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
           {/* Classification Segmented Tabs */}
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 text-xs">
+          <div className="flex w-full overflow-x-auto rounded-xl bg-slate-100 p-1 text-xs sm:w-auto scrollbar-none touch-pan-x">
             <button
               type="button"
               onClick={() => onTypeFilterChange('all')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'all'
+              className={`inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'all'
                 ? 'bg-white text-slate-900 shadow-2xs font-semibold hover:shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 hover:shadow-2xs'
                 }`}
@@ -75,7 +75,7 @@ function SalesOrdersFilters({
             <button
               type="button"
               onClick={() => onTypeFilterChange('finished_good')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'finished_good'
+              className={`inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'finished_good'
                 ? 'bg-[#193b35] text-white shadow-2xs font-semibold hover:bg-[#234f47] hover:shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-[#193b35]/8'
                 }`}
@@ -95,7 +95,7 @@ function SalesOrdersFilters({
             <button
               type="button"
               onClick={() => onTypeFilterChange('semi_finished')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'semi_finished'
+              className={`inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-all duration-200 cursor-pointer ${typeFilter === 'semi_finished'
                 ? 'bg-[#8f4724] text-white shadow-2xs font-semibold hover:bg-[#a6532a] hover:shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-[#8f4724]/8'
                 }`}
@@ -113,90 +113,101 @@ function SalesOrdersFilters({
             </button>
           </div>
 
-          {/* Status Dropdown */}
-          <div className="group relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => onStatusFilterChange(e.target.value)}
-              aria-label="Filter by Status"
-              className="h-10 appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 text-xs font-medium text-slate-700 shadow-2xs transition-all duration-200 hover:border-slate-300 hover:bg-slate-50/80 hover:shadow-xs hover:text-slate-900 focus:border-[#193b35] focus:outline-none focus:ring-1 focus:ring-[#193b35] cursor-pointer"
-            >
-              <option value="all">All Statuses</option>
-              {ORDER_STATUSES.map((status) => (
-                <option key={status.key} value={status.key}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-hover:text-slate-600">
-              <svg className="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+            {/* Status Dropdown */}
+            <div className="group relative flex-1 sm:flex-initial min-w-[130px]">
+              <select
+                value={statusFilter}
+                onChange={(e) => onStatusFilterChange(e.target.value)}
+                aria-label="Filter by Status"
+                className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 text-xs font-medium text-slate-700 shadow-2xs transition-all duration-200 hover:border-slate-300 hover:bg-slate-50/80 hover:shadow-xs hover:text-slate-900 focus:border-[#193b35] focus:outline-none focus:ring-1 focus:ring-[#193b35] cursor-pointer"
+              >
+                <option value="all">All Statuses</option>
+                {ORDER_STATUSES.map((status) => (
+                  <option key={status.key} value={status.key}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-hover:text-slate-600">
+                <svg className="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
             </div>
-          </div>
 
-          {/* Sort Dropdown */}
-          <div className="group relative">
-            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-hover:text-slate-600">
-              <ArrowUpDown size={13} />
+            {/* Sort Dropdown */}
+            <div className="group relative flex-1 sm:flex-initial min-w-[140px]">
+              <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-hover:text-slate-600">
+                <ArrowUpDown size={13} />
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => onSortByChange(e.target.value)}
+                aria-label="Sort Orders"
+                className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 text-xs font-medium text-slate-700 shadow-2xs transition-all duration-200 hover:border-slate-300 hover:bg-slate-50/80 hover:shadow-xs hover:text-slate-900 focus:border-[#193b35] focus:outline-none focus:ring-1 focus:ring-[#193b35] cursor-pointer"
+              >
+                <option value="date_desc">Date: Newest First</option>
+                <option value="date_asc">Date: Oldest First</option>
+                <option value="value_desc">Value: High to Low</option>
+                <option value="value_asc">Value: Low to High</option>
+              </select>
+              <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-hover:text-slate-600">
+                <svg className="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
             </div>
-            <select
-              value={sortBy}
-              onChange={(e) => onSortByChange(e.target.value)}
-              aria-label="Sort Orders"
-              className="h-10 appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 text-xs font-medium text-slate-700 shadow-2xs transition-all duration-200 hover:border-slate-300 hover:bg-slate-50/80 hover:shadow-xs hover:text-slate-900 focus:border-[#193b35] focus:outline-none focus:ring-1 focus:ring-[#193b35] cursor-pointer"
-            >
-              <option value="date_desc">Date: Newest First</option>
-              <option value="date_asc">Date: Oldest First</option>
-              <option value="value_desc">Value: High to Low</option>
-              <option value="value_asc">Value: Low to High</option>
-            </select>
-            <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-hover:text-slate-600">
-              <svg className="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-          </div>
 
-          {/* Clear Filters Button */}
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={onResetFilters}
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/70 px-3 text-xs font-medium text-rose-700 shadow-2xs transition-all duration-200 hover:bg-rose-100 hover:border-rose-300 hover:text-rose-800 hover:shadow-xs active:scale-[0.98] cursor-pointer"
-              title="Clear all active filters"
-            >
-              <FilterX size={14} />
-              <span>Reset</span>
-            </button>
-          )}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={onResetFilters}
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/70 px-3 text-xs font-medium text-rose-700 shadow-2xs transition-all duration-200 hover:bg-rose-100 hover:border-rose-300 hover:text-rose-800 hover:shadow-xs active:scale-[0.98] cursor-pointer shrink-0"
+                title="Clear all active filters"
+              >
+                <FilterX size={14} />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {hasActiveFilters && (
-        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2.5 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <span>
               Matching <strong className="text-slate-800">{filteredCount}</strong> of{' '}
               <strong className="text-slate-800">{totalCount}</strong> sales orders
             </span>
             {searchTerm && (
-              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
+              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600 truncate max-w-[140px] sm:max-w-xs">
                 query: &ldquo;{searchTerm}&rdquo;
               </span>
             )}
+            {typeFilter !== 'all' && (
+              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600 capitalize">
+                type: {typeFilter.replace('_', ' ')}
+              </span>
+            )}
+            {statusFilter !== 'all' && (
+              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600 capitalize">
+                status: {statusFilter.replace('_', ' ')}
+              </span>
+            )}
           </div>
-          <p className="text-slate-800">
+          <span className="font-medium text-slate-700 hidden sm:inline">
             Filtered View
-          </p>
+          </span>
         </div>
       )}
     </section>

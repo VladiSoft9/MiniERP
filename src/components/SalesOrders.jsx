@@ -298,7 +298,7 @@ function SalesOrders() {
         aria-label="Sales Orders Table"
         className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs"
       >
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto touch-pan-x">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
