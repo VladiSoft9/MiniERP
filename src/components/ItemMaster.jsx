@@ -17,6 +17,7 @@ import { formatCurrency, formatDate } from '../utils/formatters'
 import { getItemTypeBadge } from '../utils/itemTypes'
 import ItemMasterFilters from './ItemMasterFilters'
 import ItemFormModal from './ItemFormModal'
+import DeleteItemModal from './DeleteItemModal'
 
 function ItemMaster() {
   const [items, setItems] = useState([])
@@ -25,6 +26,7 @@ function ItemMaster() {
   const [toastMessage, setToastMessage] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
+  const [deletingItem, setDeletingItem] = useState(null)
   const [, startTransition] = useTransition()
 
   const loadItems = useCallback(async () => {
@@ -143,6 +145,14 @@ function ItemMaster() {
         ? `Item "${savedItem.name}" [${savedItem.code}] was successfully updated.`
         : `Item "${savedItem.name}" [${savedItem.code}] was successfully created!`
     )
+  }, [])
+
+  const handleItemDeleted = useCallback((deletedId, item) => {
+    startTransition(() => {
+      setItems((prev) => prev.filter((it) => it.id !== deletedId))
+    })
+    setToastMessage(`Item "${item.name}" [${item.code}] was successfully deleted.`)
+    setDeletingItem(null)
   }, [])
 
   return (
@@ -426,6 +436,7 @@ function ItemMaster() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => setDeletingItem(item)}
                           title={`Delete ${item.name}`}
                           className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                         >
@@ -455,7 +466,7 @@ function ItemMaster() {
         </div>
       </section>
 
-      {/* Add / Edit Item Modal */}
+      {/* Add / Edit / Deleting Item Modals */}
       {isFormOpen && (
         <ItemFormModal
           key={editingItem?.id || 'new-item'}
@@ -466,6 +477,15 @@ function ItemMaster() {
           }}
           onSuccess={handleItemSaved}
           item={editingItem}
+        />
+      )}
+
+      {deletingItem && (
+        <DeleteItemModal
+          isOpen={Boolean(deletingItem)}
+          item={deletingItem}
+          onClose={() => setDeletingItem(null)}
+          onSuccess={handleItemDeleted}
         />
       )}
     </main>
